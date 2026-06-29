@@ -20,7 +20,7 @@ export const bookingsService = {
   async confirmBooking(userId: string, dto: CreateBookingDto) {
     // 1. Atomically consume hold metadata — GETDEL ensures only one concurrent
     //    confirm request can proceed even if the user double-submits.
-    const raw = await redis.getdel(`hold_meta:${dto.holdId}`);
+    const raw = await redis.get(`hold_meta:${dto.holdId}`);
     if (!raw) throw new ConflictError("Your seat hold has expired. Please reselect seats.");
 
     const meta = JSON.parse(raw) as HoldMeta;

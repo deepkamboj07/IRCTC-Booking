@@ -56,12 +56,13 @@ export function ChatWindow() {
 
     let accText = "";
     const toolEvents: Message["toolEvents"] = [];
+    const navigateActions: NonNullable<Message["navigateActions"]> = [];
 
     try {
       for await (const event of streamChatMessage(userText, controller.signal)) {
-        handleEvent(event, assistantId, toolEvents, (text) => {
+        handleEvent(event, assistantId, toolEvents, navigateActions, (text) => {
           accText += text;
-          patchAssistant(assistantId, { text: accText, toolEvents: [...toolEvents] });
+          patchAssistant(assistantId, { text: accText, toolEvents: [...toolEvents], navigateActions: [...navigateActions] });
         });
       }
     } catch (err) {
@@ -80,6 +81,7 @@ export function ChatWindow() {
     event: ChatEvent,
     assistantId: string,
     toolEvents: Message["toolEvents"],
+    navigateActions: NonNullable<Message["navigateActions"]>,
     onText: (t: string) => void,
   ) {
     switch (event.type) {
@@ -102,6 +104,10 @@ export function ChatWindow() {
         patchAssistant(assistantId, { toolEvents: [...toolEvents] });
         break;
       }
+      case "navigate":
+        navigateActions.push({ label: event.label, path: event.path });
+        patchAssistant(assistantId, { navigateActions: [...navigateActions] });
+        break;
       case "error":
         onText(event.error);
         break;

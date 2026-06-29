@@ -1,11 +1,13 @@
-import { Train } from "lucide-react";
+import { Train, ExternalLink } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export interface Message {
-  id:         string;
-  role:       "user" | "assistant";
-  text:       string;
-  toolEvents: Array<{ name: string; summary?: string; error?: string; status: "running" | "done" | "error" }>;
-  streaming?: boolean;
+  id:              string;
+  role:            "user" | "assistant";
+  text:            string;
+  toolEvents:      Array<{ name: string; summary?: string; error?: string; status: "running" | "done" | "error" }>;
+  navigateActions?: Array<{ label: string; path: string }>;
+  streaming?:      boolean;
 }
 
 const TOOL_LABELS: Record<string, string> = {
@@ -18,6 +20,19 @@ const TOOL_LABELS: Record<string, string> = {
   get_booking_detail: "Loading booking detail",
   cancel_booking:     "Cancelling booking",
 };
+
+function NavigateButton({ label, path }: { label: string; path: string }) {
+  const navigate = useNavigate();
+  return (
+    <button
+      onClick={() => navigate(path)}
+      className="flex items-center gap-1.5 text-xs font-medium text-brand-primary border border-brand-primary/30 bg-brand-primary/5 hover:bg-brand-primary/10 rounded-lg px-3 py-1.5 transition-colors"
+    >
+      <ExternalLink className="w-3 h-3" />
+      {label}
+    </button>
+  );
+}
 
 function ToolEvent({ event }: { event: Message["toolEvents"][0] }) {
   const label = TOOL_LABELS[event.name] ?? event.name;
@@ -59,6 +74,15 @@ export function ChatMessage({ message }: { message: Message }) {
           <div className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
             {message.toolEvents.map((ev, i) => (
               <ToolEvent key={i} event={ev} />
+            ))}
+          </div>
+        )}
+
+        {/* Navigate action buttons */}
+        {message.navigateActions && message.navigateActions.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-1">
+            {message.navigateActions.map((action, i) => (
+              <NavigateButton key={i} label={action.label} path={action.path} />
             ))}
           </div>
         )}

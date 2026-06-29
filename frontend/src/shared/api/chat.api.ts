@@ -7,6 +7,7 @@ export type ChatEvent =
   | { type: "tool_start"; name: string }
   | { type: "tool_done"; name: string; summary: string }
   | { type: "tool_error"; name: string; error: string }
+  | { type: "navigate"; label: string; path: string }
   | { type: "error"; error: string }
   | { type: "done"; sessionId: string };
 

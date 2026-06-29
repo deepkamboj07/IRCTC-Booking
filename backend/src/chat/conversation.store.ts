@@ -15,7 +15,19 @@ export const conversationStore = {
   },
 
   async save(sessionId: string, messages: Content[]): Promise<void> {
-    const trimmed = messages.slice(-(MAX_TURNS * 2));
+    let trimmed = messages.slice(-(MAX_TURNS * 2));
+
+    // Gemini requires history to start with a plain user text message.
+    // If slicing cut into the middle of a tool-call turn, skip forward
+    // until we find a user message that contains only text parts.
+    let startIdx = 0;
+    while (startIdx < trimmed.length) {
+      const msg = trimmed[startIdx];
+      if (msg.role === "user" && msg.parts.every((p) => !p.functionResponse)) break;
+      startIdx++;
+    }
+    trimmed = trimmed.slice(startIdx);
+
     await redis.setex(key(sessionId), TTL, JSON.stringify(trimmed));
   },
 

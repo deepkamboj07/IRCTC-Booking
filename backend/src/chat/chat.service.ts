@@ -39,7 +39,8 @@ ${bookingStateText}
 - Show fares as ₹ (Indian Rupees)
 - If a hold expires mid-conversation, apologise and re-call hold_seats
 - Keep responses concise — this is a chat interface
-- Berth types: LOWER (best for elderly/children), UPPER, MIDDLE, SIDE_LOWER, SIDE_UPPER`;
+- Berth types: LOWER (best for elderly/children), UPPER, MIDDLE, SIDE_LOWER, SIDE_UPPER
+- After EVERY tool call, ALWAYS respond with a text summary of what you found — never return a tool call without following up with text`;
 }
 
 // ─── Update booking state after tool calls ────────────────────────────────────
@@ -104,7 +105,7 @@ export const chatService = {
     const systemPrompt = buildSystemPrompt(user, bookingStateStore.format(bookingState));
 
     const model = genAI.getGenerativeModel({
-      model:             "gemini-2.0-flash",
+      model:             "gemini-3.1-flash-lite",
       systemInstruction: systemPrompt,
       tools:             [{ functionDeclarations: TOOL_DEFINITIONS }],
     });
@@ -153,6 +154,12 @@ export const chatService = {
               name: fc.name,
               summary: conversationStore.compressToolResult(fc.name, responseData),
             });
+            if (fc.name === "get_my_bookings" || fc.name === "confirm_booking") {
+              sseWrite(res, { type: "navigate", label: "View My Bookings", path: "/my-bookings" });
+            }
+            if (fc.name === "get_booking_detail") {
+              sseWrite(res, { type: "navigate", label: "View My Bookings", path: "/my-bookings" });
+            }
           } catch (err) {
             const errMsg = err instanceof Error ? err.message : "Tool failed";
             responseData = { error: errMsg };
